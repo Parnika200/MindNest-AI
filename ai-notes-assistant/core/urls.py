@@ -32,4 +32,7 @@ path(
     views.summary_download,
     name="summary_download",
 ),
+
+#chatbot
+path("chat/", views.chat_page, name="chat_page"),
 ]

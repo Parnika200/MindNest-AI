@@ -4,7 +4,7 @@ from django.http import FileResponse, Http404,HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from .forms import StudyMaterialForm
-from .models import StudyMaterial,Summary
+from .models import StudyMaterial,Summary,ChatHistory
 import logging
 from django.contrib import messages
 from django.conf import settings
@@ -293,3 +293,106 @@ def summary_download(request, summary_id):
     )
 
     return response
+
+#CHAT BOT
+@login_required
+def chat_page(request):
+    materials = (
+        StudyMaterial.objects
+        .filter(user=request.user, status="processed")
+        .exclude(extracted_text="")
+        .order_by("title")
+    )
+
+    selected_material = None
+    selected_material_id = request.POST.get(
+        "material_id",
+        request.GET.get("material_id", ""),
+    )
+
+    if selected_material_id:
+        selected_material = get_object_or_404(
+            StudyMaterial,
+            id=selected_material_id,
+            user=request.user,
+            status="processed",
+        )
+
+    if request.method == "POST":
+        question = request.POST.get("question", "").strip()
+
+        if not selected_material:
+            messages.error(request, "Select a study material first.")
+        elif not question:
+            messages.error(request, "Enter a question.")
+        elif len(question) > 2000:
+            messages.error(request, "Keep your question under 2,000 characters.")
+        elif not selected_material.extracted_text.strip():
+            messages.error(
+                request,
+                "This material does not have extracted text to chat about.",
+            )
+        else:
+            # Include recent exchanges so follow-up questions have context.
+            previous_messages = list(
+                ChatHistory.objects
+                .filter(
+                    user=request.user,
+                    material=selected_material,
+                )
+                .order_by("-asked_at")[:6]
+            )
+            previous_messages.reverse()
+
+            try:
+                answer = answer_question(
+                    material_text=selected_material.extracted_text[:60000],
+                    topic=selected_material.title,
+                    question=question,
+                    previous_messages=previous_messages,
+                )
+
+                ChatHistory.objects.create(
+                    user=request.user,
+                    material=selected_material,
+                    question=question,
+                    answer=answer,
+                )
+
+                messages.success(request, "Your answer is ready.")
+
+            except Exception:
+                logger.exception(
+                    "Chat answer generation failed for material ID %s",
+                    selected_material.id,
+                )
+                messages.error(
+                    request,
+                    "I couldn’t generate an answer. Check your Gemini settings and try again.",
+                )
+
+        if selected_material:
+            chat_url = reverse("chat_page")
+            return redirect(f"{chat_url}?material_id={selected_material.id}")
+
+    chat_history = []
+
+    if selected_material:
+        chat_history = (
+            ChatHistory.objects
+            .filter(
+                user=request.user,
+                material=selected_material,
+            )
+            .order_by("asked_at")
+        )
+
+    return render(
+        request,
+        "core/chat.html",
+        {
+            "materials": materials,
+            "selected_material": selected_material,
+            "chat_history": chat_history,
+        },
+    )
