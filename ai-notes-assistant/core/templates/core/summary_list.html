@@ -1,0 +1,56 @@
+<h1>View Summaries</h1>
+
+<form method="get">
+    <label for="summary-search">Search topic or summary text:</label>
+    <input
+        id="summary-search"
+        type="search"
+        name="q"
+        value="{{ search_query }}"
+        placeholder="Search summaries"
+    >
+
+    <label for="summary-type-filter">Filter by type:</label>
+    <select id="summary-type-filter" name="type">
+        <option value="">All types</option>
+        {% for value, label in summary_types %}
+            <option
+                value="{{ value }}"
+                {% if selected_type == value %}selected{% endif %}
+            >
+                {{ label }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <button type="submit">Search</button>
+    <a href="{% url 'summary_list' %}">Clear</a>
+</form>
+
+{% if summaries %}
+    {% regroup summaries by material as topic_groups %}
+
+    {% for group in topic_groups %}
+        <section>
+            <h2>{{ group.grouper.title }}</h2>
+
+            {% for summary in group.list %}
+                <article>
+                    <h3>{{ summary.get_summary_type_display }}</h3>
+                    <p>
+                        Generated:
+                        {{ summary.generated_at|date:"d M Y, H:i" }}
+                    </p>
+
+                    <pre>{{ summary.summary_text }}</pre>
+
+                    <a href="{% url 'summary_download' summary.id %}">
+                        Download PDF
+                    </a>
+                </article>
+            {% endfor %}
+        </section>
+    {% endfor %}
+{% else %}
+    <p>No summaries match your search. Generate one from My Materials.</p>
+{% endif %}

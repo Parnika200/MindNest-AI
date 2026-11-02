@@ -37,12 +37,17 @@ def dashboard(request):
 # UPLOAD PDF 
 @login_required
 def material_list(request):
-    materials = StudyMaterial.objects.filter(user=request.user).order_by("-uploaded_at")
- #show all material list
+    materials = StudyMaterial.objects.filter(
+        user=request.user
+    ).order_by("-uploaded_at")
+
     return render(
         request,
         "core/material_list.html",
-        {"materials": materials},
+        {
+            "materials": materials,
+            "summary_types": Summary.SummaryType.choices,
+        },
     )
 
 @login_required

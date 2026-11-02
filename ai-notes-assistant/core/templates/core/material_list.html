@@ -1,6 +1,16 @@
 <h1>My Study Materials</h1>
 
-<p><a href="{% url 'material_upload' %}">Upload study material</a></p>
+<p>
+    <a href="{% url 'material_upload' %}">Upload study material</a>
+    |
+    <a href="{% url 'summary_list' %}">View summaries</a>
+</p>
+
+{% if messages %}
+    {% for message in messages %}
+        <p>{{ message }}</p>
+    {% endfor %}
+{% endif %}
 
 {% if materials %}
     <ul>
@@ -40,6 +50,31 @@
                         <summary>Preview extracted text</summary>
                         <pre>{{ material.extracted_text|truncatechars:1500 }}</pre>
                     </details>
+
+                    <form
+                        method="post"
+                        action="{% url 'summary_generate' material.id %}"
+                    >
+                        {% csrf_token %}
+
+                        <label for="summary-type-{{ material.id }}">
+                            Generate:
+                        </label>
+
+                        <select
+                            id="summary-type-{{ material.id }}"
+                            name="summary_type"
+                            required
+                        >
+                            {% for value, label in summary_types %}
+                                <option value="{{ value }}">
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+
+                        <button type="submit">Create summary</button>
+                    </form>
                 {% endif %}
             </li>
         {% endfor %}
