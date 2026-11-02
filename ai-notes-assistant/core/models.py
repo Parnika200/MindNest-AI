@@ -22,23 +22,68 @@ class StudyMaterial(models.Model):
         return self.title
 
 class Summary(models.Model):
+    class SummaryType(models.TextChoices):
+        SHORT = "short", "Short summary"
+        LONG = "long", "Long summary"
+
     material = models.ForeignKey(
         StudyMaterial,
         on_delete=models.CASCADE,
         related_name="summaries",
     )
+    summary_type = models.CharField(
+        max_length=20,
+        choices=SummaryType.choices,
+        default=SummaryType.SHORT,
+    )
     summary_text = models.TextField()
-    key_concepts = models.TextField(blank=True)
-    key_points = models.TextField(blank=True)
+    key_concepts = models.JSONField(default=list, blank=True)
+    key_points = models.JSONField(default=list, blank=True)
     generated_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-generated_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["material", "summary_type"],
+                name="one_summary_per_type_per_material",
+            )
+        ]
 
     def __str__(self):
-        return f"Summary for {self.material.title}"
+        return f"{self.get_summary_type_display()} for {self.material.title}"
 
+class Summary(models.Model):
+    class SummaryType(models.TextChoices):
+        SHORT = "short", "Short summary"
+        LONG = "long", "Long summary"
 
+    material = models.ForeignKey(
+        StudyMaterial,
+        on_delete=models.CASCADE,
+        related_name="summaries",
+    )
+    summary_type = models.CharField(
+        max_length=20,
+        choices=SummaryType.choices,
+        default=SummaryType.SHORT,
+    )
+    summary_text = models.TextField()
+    key_concepts = models.JSONField(default=list, blank=True)
+    key_points = models.JSONField(default=list, blank=True)
+    generated_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-generated_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["material", "summary_type"],
+                name="one_summary_per_type_per_material",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.get_summary_type_display()} for {self.material.title}"
 class ChatHistory(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

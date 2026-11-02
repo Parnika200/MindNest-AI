@@ -1,15 +1,16 @@
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
-from django.http import FileResponse, Http404
+from django.http import FileResponse, Http404,HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 from .forms import StudyMaterialForm
-from .models import StudyMaterial
+from .models import StudyMaterial,Summary
 import logging
 from django.contrib import messages
-
-from .forms import StudyMaterialForm
-from .models import StudyMaterial
+from django.conf import settings
+from django.db.models import Q
+from django.utils.text import slugify #name downloaded file
+from .summary_service import generate_summary
 from .text_extraction import (
     NoTextExtractedError,
     extract_text_from_material,
@@ -129,3 +130,161 @@ def material_delete(request, material_id):
     material.delete()
 
     return redirect("material_list")
+
+
+#SUMMARY
+@login_required
+def summary_list(request):
+    summaries = (
+        Summary.objects
+        .filter(material__user=request.user)
+        .select_related("material")
+        .order_by("material__title", "-generated_at")
+    )
+
+    search_query = request.GET.get("q", "").strip()
+    selected_type = request.GET.get("type", "").strip()
+
+    if search_query:
+        summaries = summaries.filter(
+            Q(material__title__icontains=search_query)
+            | Q(summary_text__icontains=search_query)
+        )
+
+    valid_types = {
+        value for value, label in Summary.SummaryType.choices
+    }
+
+    if selected_type in valid_types:
+        summaries = summaries.filter(summary_type=selected_type)
+    else:
+        selected_type = ""
+
+    return render(
+        request,
+        "core/summary_list.html",
+        {
+            "summaries": summaries,
+            "search_query": search_query,
+            "selected_type": selected_type,
+            "summary_types": Summary.SummaryType.choices,
+        },
+    )
+
+
+@login_required
+@require_POST
+def summary_generate(request, material_id):
+    material = get_object_or_404(
+        StudyMaterial,
+        id=material_id,
+        user=request.user,
+    )
+
+    summary_type = request.POST.get("summary_type", "")
+    valid_types = {
+        value for value, label in Summary.SummaryType.choices
+    }
+
+    if summary_type not in valid_types:
+        messages.error(request, "Choose a valid summary type.")
+        return redirect("material_list")
+
+    if not material.extracted_text.strip():
+        messages.error(
+            request,
+            "This material has no extracted text. Upload or process it again first.",
+        )
+        return redirect("material_list")
+
+    # Limit very large inputs for this first version.
+    source_text = material.extracted_text[:60000]
+
+    try:
+        generated_text = generate_summary(
+            source_text=source_text,
+            topic=material.title,
+            summary_type=summary_type,
+        )
+
+        Summary.objects.create(
+            material=material,
+            summary_type=summary_type,
+            summary_text=generated_text,
+            key_concepts="",
+            key_points=(
+                generated_text if summary_type == "key_points" else ""
+            ),
+        )
+
+        messages.success(request, "Your summary has been generated and saved.")
+
+    except Exception:
+        logger.exception(
+            "Summary generation failed for study material ID %s",
+            material.id,
+        )
+        messages.error(
+            request,
+            "Summary generation failed. Check your Gemini API key and try again.",
+        )
+
+    return redirect("summary_list")
+
+
+@login_required
+def summary_download(request, summary_id):
+    summary = get_object_or_404(
+        Summary.objects.select_related("material"),
+        id=summary_id,
+        material__user=request.user,
+    )
+
+    from html import escape
+    from io import BytesIO
+
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.lib.units import inch
+    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+
+    pdf_buffer = BytesIO()
+    styles = getSampleStyleSheet()
+
+    document = SimpleDocTemplate(
+        pdf_buffer,
+        pagesize=letter,
+        rightMargin=0.75 * inch,
+        leftMargin=0.75 * inch,
+        topMargin=0.75 * inch,
+        bottomMargin=0.75 * inch,
+        title=f"{summary.material.title} - {summary.get_summary_type_display()}",
+    )
+
+    content = [
+        Paragraph(escape(summary.material.title), styles["Title"]),
+        Spacer(1, 12),
+        Paragraph(escape(summary.get_summary_type_display()), styles["Heading2"]),
+        Spacer(1, 12),
+    ]
+
+    for line in summary.summary_text.splitlines():
+        safe_line = escape(line.strip())
+        if safe_line:
+            content.append(Paragraph(safe_line, styles["BodyText"]))
+            content.append(Spacer(1, 6))
+
+    document.build(content)
+
+    response = HttpResponse(
+        pdf_buffer.getvalue(),
+        content_type="application/pdf",
+    )
+
+    safe_topic = slugify(summary.material.title) or "study-summary"
+    safe_type = slugify(summary.summary_type)
+    response["Content-Disposition"] = (
+        f'attachment; filename="{safe_topic}-{safe_type}.pdf"'
+    )
+
+    return response
