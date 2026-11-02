@@ -15,7 +15,7 @@ def answer_question(material_text, topic, question, previous_messages=None):
             f"Assistant answered: {item.answer}\n\n"
         )
 
-        prompt = f"""
+    prompt = f"""
 You are a study assistant helping a student understand their uploaded material.
 
 Topic: {topic}

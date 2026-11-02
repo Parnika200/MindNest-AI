@@ -15,6 +15,9 @@ from .text_extraction import (
     NoTextExtractedError,
     extract_text_from_material,
 )
+from django.urls import reverse
+from .chat_service import answer_question
+
 
 logger = logging.getLogger(__name__)
 # Content type for each supported file extension
