@@ -355,3 +355,22 @@ def quiz_result(request, attempt_id):
             "review": review,
         },
     )
+
+
+
+@login_required
+@require_POST
+def quiz_delete(request, quiz_id):
+    quiz = get_object_or_404(
+        Quiz,
+        id=quiz_id,
+        user=request.user,
+    )
+
+    quiz.delete()
+    messages.success(
+        request,
+        "Quiz and its saved attempts and scores were deleted.",
+    )
+
+    return redirect("quiz_list")

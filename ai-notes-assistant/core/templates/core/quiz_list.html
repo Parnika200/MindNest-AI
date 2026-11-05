@@ -35,6 +35,15 @@
                     <button type="submit">Start quiz</button>
                 </form>
 
+                <form
+    method="post"
+    action="{% url 'quiz_delete' card.quiz.id %}"
+    onsubmit="return confirm('Delete this quiz? Its questions, attempts, and scores will also be deleted. This cannot be undone.');"
+>
+    {% csrf_token %}
+    <button type="submit">Delete quiz</button>
+</form>
+
                 {% if card.attempts %}
                     <details>
                         <summary>Previous scores</summary>

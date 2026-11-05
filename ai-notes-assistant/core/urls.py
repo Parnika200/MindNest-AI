@@ -59,4 +59,9 @@ path(
     quiz_views.quiz_result,
     name="quiz_result",
 ),
+path(
+    "quizzes/<int:quiz_id>/delete/",
+    quiz_views.quiz_delete,
+    name="quiz_delete",
+),
 ]
