@@ -1,0 +1,37 @@
+<h1>Quiz Results</h1>
+
+<p>Quiz: {{ attempt.quiz.title }}</p>
+<p>Topic: {{ attempt.quiz.material.title }}</p>
+<p>Difficulty: {{ attempt.quiz.get_difficulty_display }}</p>
+<p>
+    Score:
+    <strong>{{ attempt.score }} / {{ attempt.total_questions }}</strong>
+</p>
+
+<p><a href="{% url 'quiz_list' %}">Back to Quizzes</a></p>
+
+<h2>Answer review</h2>
+
+{% for item in review %}
+    <section>
+        <h3>{{ forloop.counter }}. {{ item.question.question_text }}</h3>
+
+        {% if item.is_correct %}
+            <p>Your answer: {{ item.selected_option }} — {{ item.selected_text }}</p>
+            <p>Correct</p>
+        {% else %}
+            <p>Your answer: {{ item.selected_option }} — {{ item.selected_text }}</p>
+            <p>
+                Correct answer:
+                {{ item.correct_option }} — {{ item.correct_text }}
+            </p>
+        {% endif %}
+
+        {% if item.explanation %}
+            <p>Explanation: {{ item.explanation }}</p>
+        {% endif %}
+    </section>
+    <hr>
+{% empty %}
+    <p>No questions were available for review.</p>
+{% endfor %}
