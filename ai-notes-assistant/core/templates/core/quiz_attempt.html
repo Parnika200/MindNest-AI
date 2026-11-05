@@ -1,0 +1,116 @@
+<h1>{{ attempt.quiz.title }}</h1>
+
+<p>Topic: {{ attempt.quiz.material.title }}</p>
+<p>Difficulty: {{ attempt.quiz.get_difficulty_display }}</p>
+<p>
+    Time remaining:
+    <strong id="timer"></strong>
+</p>
+
+<form
+    id="quiz-form"
+    method="post"
+    action="{% url 'quiz_submit' attempt.id %}"
+    data-remaining-seconds="{{ remaining_seconds }}"
+>
+    {% csrf_token %}
+
+    {% for question in questions %}
+        <section>
+            <h2>{{ forloop.counter }}. {{ question.question_text }}</h2>
+
+            <label>
+                <input
+                    type="radio"
+                    name="question_{{ question.id }}"
+                    value="A"
+                >
+                {{ question.option_a }}
+            </label>
+            <br>
+
+            <label>
+                <input
+                    type="radio"
+                    name="question_{{ question.id }}"
+                    value="B"
+                >
+                {{ question.option_b }}
+            </label>
+            <br>
+
+            <label>
+                <input
+                    type="radio"
+                    name="question_{{ question.id }}"
+                    value="C"
+                >
+                {{ question.option_c }}
+            </label>
+            <br>
+
+            <label>
+                <input
+                    type="radio"
+                    name="question_{{ question.id }}"
+                    value="D"
+                >
+                {{ question.option_d }}
+            </label>
+        </section>
+        <hr>
+    {% endfor %}
+
+    <button id="submit-button" type="submit">Submit quiz</button>
+</form>
+
+<script>
+    const form = document.getElementById("quiz-form");
+    const timer = document.getElementById("timer");
+    const submitButton = document.getElementById("submit-button");
+
+    let remainingSeconds = Number(form.dataset.remainingSeconds);
+    let submitted = false;
+
+    function submitWhenTimeEnds() {
+        if (!submitted) {
+            submitted = true;
+            submitButton.disabled = true;
+            form.submit();
+        }
+    }
+
+    function updateTimer() {
+        const minutes = Math.floor(remainingSeconds / 60);
+        const seconds = remainingSeconds % 60;
+
+        timer.textContent =
+            String(minutes).padStart(2, "0") + ":" +
+            String(seconds).padStart(2, "0");
+
+        if (remainingSeconds <= 0) {
+            submitWhenTimeEnds();
+            return;
+        }
+
+        remainingSeconds -= 1;
+    }
+
+    form.addEventListener("submit", function () {
+        submitted = true;
+    });
+
+    updateTimer();
+    const timerInterval = setInterval(function () {
+        if (submitted) {
+            clearInterval(timerInterval);
+            return;
+        }
+
+        updateTimer();
+
+        if (remainingSeconds <= 0) {
+            clearInterval(timerInterval);
+        }
+    }, 1000);
+</script>
