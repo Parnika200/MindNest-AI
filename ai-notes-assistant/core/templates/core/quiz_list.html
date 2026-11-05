@@ -1,0 +1,61 @@
+<h1>Quizzes</h1>
+
+<p>
+    <a href="{% url 'quiz_create' %}">Generate a quiz</a>
+    |
+    <a href="{% url 'material_list' %}">My Materials</a>
+</p>
+
+{% if messages %}
+    {% for message in messages %}
+        <p>{{ message }}</p>
+    {% endfor %}
+{% endif %}
+
+{% if quiz_cards %}
+    <ul>
+        {% for card in quiz_cards %}
+            <li>
+                <h2>{{ card.quiz.title }}</h2>
+                <p>Topic: {{ card.quiz.material.title }}</p>
+                <p>Difficulty: {{ card.quiz.get_difficulty_display }}</p>
+                <p>Timer: {{ card.quiz.duration_minutes }} minutes</p>
+                <p>Previous attempts: {{ card.attempt_count }}</p>
+
+                {% if card.best_attempt %}
+                    <p>
+                        Best score:
+                        {{ card.best_attempt.score }}
+                        / {{ card.best_attempt.total_questions }}
+                    </p>
+                {% endif %}
+
+                <form method="post" action="{% url 'quiz_start' card.quiz.id %}">
+                    {% csrf_token %}
+                    <button type="submit">Start quiz</button>
+                </form>
+
+                {% if card.attempts %}
+                    <details>
+                        <summary>Previous scores</summary>
+                        <ul>
+                            {% for attempt in card.attempts %}
+                                <li>
+                                    {{ attempt.score }}/{{ attempt.total_questions }}
+                                    — {{ attempt.started_at|date:"d M Y, H:i" }}
+                                    {% if attempt.completed_at %}
+                                        <a href="{% url 'quiz_result' attempt.id %}">
+                                            View result
+                                        </a>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </details>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>You haven’t generated any quizzes yet.</p>
+{% endif %}

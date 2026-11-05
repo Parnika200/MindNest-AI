@@ -1,0 +1,54 @@
+<h1>Generate a Quiz</h1>
+
+<p><a href="{% url 'quiz_list' %}">Back to Quizzes</a></p>
+
+{% if messages %}
+    {% for message in messages %}
+        <p>{{ message }}</p>
+    {% endfor %}
+{% endif %}
+
+{% if materials %}
+    <form method="post">
+        {% csrf_token %}
+
+        <p>
+            <label for="material-id">Study material:</label>
+            <select id="material-id" name="material_id" required>
+                <option value="">-- Choose material --</option>
+                {% for material in materials %}
+                    <option value="{{ material.id }}">
+                        {{ material.title }} ({{ material.file_type }})
+                    </option>
+                {% endfor %}
+            </select>
+        </p>
+
+        <p>
+            <label for="difficulty">Difficulty:</label>
+            <select id="difficulty" name="difficulty" required>
+                {% for value, label in difficulty_choices %}
+                    <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+        </p>
+
+        <p>
+            <label for="question-count">Number of questions:</label>
+            <select id="question-count" name="question_count" required>
+                {% for count in question_counts %}
+                    <option value="{{ count }}">{{ count }}</option>
+                {% endfor %}
+            </select>
+        </p>
+
+        <p>Each quiz has a 10-minute timer.</p>
+
+        <button type="submit">Generate quiz</button>
+    </form>
+{% else %}
+    <p>
+        You need a processed material with extracted text before you can
+        generate a quiz.
+    </p>
+{% endif %}
