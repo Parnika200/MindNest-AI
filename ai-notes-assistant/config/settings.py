@@ -116,6 +116,54 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 
+"""
+# ALLAUTH settings
+SITE_ID = 1
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+
+ACCOUNT_LOGIN_METHODS = {"email"} # login with email
+
+#registration form fields
+ACCOUNT_SIGNUP_FIELDS = [
+    "email*",
+    "username*",
+    "password1*",
+    "password2*",
+]
+
+
+ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_EMAIL_SUBJECT_PREFIX = ""
+
+LOGIN_REDIRECT_URL = "/dashboard/" # go to dashboard when logged in
+LOGOUT_REDIRECT_URL = "/" # when logout
+LOGIN_URL = "/accounts/login/" # when user tries to access secured page
+
+
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_TIMEOUT = 20
+
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "").strip()
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "").strip()
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": ["profile", "email"],
+        "OAUTH_PKCE_ENABLED": True,
+    },
+}"""
+
 
 # ALLAUTH settings
 SITE_ID = 1
@@ -139,6 +187,11 @@ ACCOUNT_SIGNUP_FIELDS = [
 
 ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_EMAIL_SUBJECT_PREFIX = ""
+
+# Password reset with a 6-digit code instead of a link
+ACCOUNT_PASSWORD_RESET_BY_CODE_ENABLED = True
+ACCOUNT_PASSWORD_RESET_BY_CODE_TIMEOUT = 600        # code valid for 10 minutes
+ACCOUNT_PASSWORD_RESET_BY_CODE_MAX_ATTEMPTS = 3     # wrong tries allowed
 
 LOGIN_REDIRECT_URL = "/dashboard/" # go to dashboard when logged in
 LOGOUT_REDIRECT_URL = "/" # when logout
