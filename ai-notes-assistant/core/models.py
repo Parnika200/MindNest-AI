@@ -108,6 +108,19 @@ class ChatHistory(models.Model):
 
 
 class Quiz(models.Model):
+    class Difficulty(models.TextChoices):
+        EASY = "easy", "Easy"
+        MEDIUM = "medium", "Medium"
+        HARD = "hard", "Hard"
+
+    difficulty = models.CharField(
+        max_length=10,
+        choices=Difficulty.choices,
+        default=Difficulty.MEDIUM,
+    )
+
+    duration_minutes = models.PositiveSmallIntegerField(default=10)
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
