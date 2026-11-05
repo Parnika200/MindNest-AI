@@ -1,5 +1,5 @@
 from django.urls import path
-
+from . import quiz_views
 from . import views
 
 urlpatterns = [
@@ -35,4 +35,28 @@ path(
 
 #chatbot
 path("chat/", views.chat_page, name="chat_page"),
+
+#quize
+path("quizzes/", quiz_views.quiz_list, name="quiz_list"),
+path("quizzes/create/", quiz_views.quiz_create, name="quiz_create"),
+path(
+    "quizzes/<int:quiz_id>/start/",
+    quiz_views.quiz_start,
+    name="quiz_start",
+),
+path(
+    "quiz-attempts/<int:attempt_id>/",
+    quiz_views.quiz_attempt,
+    name="quiz_attempt",
+),
+path(
+    "quiz-attempts/<int:attempt_id>/submit/",
+    quiz_views.quiz_submit,
+    name="quiz_submit",
+),
+path(
+    "quiz-attempts/<int:attempt_id>/result/",
+    quiz_views.quiz_result,
+    name="quiz_result",
+),
 ]
