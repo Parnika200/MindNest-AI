@@ -1,7 +1,13 @@
-from pydantic import BaseModel
+import logging
+
 from django.conf import settings
 from google import genai
 from google.genai import types
+from google.genai.errors import ServerError
+from pydantic import BaseModel
+
+
+logger = logging.getLogger(__name__)
 
 
 class FlashcardDraft(BaseModel):
@@ -33,21 +39,54 @@ Study material:
 
     client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
-    response = client.models.generate_content(
-        model=settings.GEMINI_MODEL,
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            response_schema=FlashcardDraftSet,
-        ),
-    )
+    # Try the model configured in settings first, then the backup model.
+    model_names = list(dict.fromkeys([
+        settings.GEMINI_MODEL,
+        "gemini-3.1-flash-lite",
+    ]))
 
-    if not response.text:
-        raise RuntimeError("Gemini returned an empty response.")
+    last_server_error = None
 
-    result = FlashcardDraftSet.model_validate_json(response.text)
+    for model_name in model_names:
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=FlashcardDraftSet,
+                ),
+            )
 
-    if len(result.flashcards) != number_of_cards:
-        raise RuntimeError("Gemini returned the wrong number of flashcards.")
+            if not response.text:
+                raise RuntimeError("Gemini returned an empty response.")
 
-    return result.flashcards
+            result = FlashcardDraftSet.model_validate_json(response.text)
+
+            if len(result.flashcards) != number_of_cards:
+                raise RuntimeError(
+                    "Gemini returned the wrong number of flashcards."
+                )
+
+            return result.flashcards
+
+        except ServerError as error:
+            status_code = (
+                getattr(error, "code", None)
+                or getattr(error, "status_code", None)
+            )
+
+            # Retry with the backup model for a temporary server overload.
+            if status_code not in (None, 503):
+                raise
+
+            logger.warning(
+                "Gemini model %s returned a server error; trying the next model.",
+                model_name,
+            )
+            last_server_error = error
+
+    if last_server_error:
+        raise last_server_error
+
+    raise RuntimeError("No Gemini model was available.")

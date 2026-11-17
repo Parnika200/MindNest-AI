@@ -1,0 +1,121 @@
+<h1>Flashcards</h1>
+
+<p>
+    <a href="{% url 'material_list' %}">My Materials</a>
+</p>
+
+{% if messages %}
+    {% for message in messages %}
+        <p>{{ message }}</p>
+    {% endfor %}
+{% endif %}
+
+<form method="get" action="{% url 'flashcard_list' %}">
+    <label for="material-select">Choose study material:</label>
+
+    <select id="material-select" name="material_id" required>
+        <option value="">-- Choose material --</option>
+
+        {% for material in materials %}
+            <option
+                value="{{ material.id }}"
+                {% if selected_material and selected_material.id == material.id %}
+                    selected
+                {% endif %}
+            >
+                {{ material.title }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <button type="submit">Open flashcards</button>
+</form>
+
+{% if not materials %}
+    <p>
+        You need a processed material with extracted text before generating
+        flashcards.
+    </p>
+{% endif %}
+
+{% if selected_material %}
+    <h2>{{ selected_material.title }}</h2>
+
+    <form method="post" action="{% url 'flashcard_generate' %}">
+        {% csrf_token %}
+
+        <input
+            type="hidden"
+            name="material_id"
+            value="{{ selected_material.id }}"
+        >
+
+        <label for="card-count">Number of cards:</label>
+        <select id="card-count" name="number_of_cards">
+            {% for count in card_counts %}
+                <option value="{{ count }}">{{ count }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Generate flashcards</button>
+    </form>
+
+    {% if progress %}
+        <h3>Revision progress</h3>
+        <p>Completed review sessions: {{ progress.revision_count }}</p>
+        <p>Status: {{ progress.get_status_display }}</p>
+
+        {% if progress.last_revised_at %}
+            <p>
+                Last revised:
+                {{ progress.last_revised_at|date:"d M Y, H:i" }}
+            </p>
+        {% endif %}
+    {% endif %}
+
+    {% if cards %}
+        <h3>Review cards</h3>
+        <p>
+            Reviewed {{ reviewed_count }} of {{ cards|length }} cards.
+        </p>
+
+        {% for card in cards %}
+            <section>
+                <p><strong>Question:</strong> {{ card.question }}</p>
+
+                <details>
+                    <summary>Show answer</summary>
+                    <p>{{ card.answer|linebreaksbr }}</p>
+                </details>
+
+                {% if card.is_reviewed %}
+                    <p>Reviewed</p>
+                {% else %}
+                    <form
+                        method="post"
+                        action="{% url 'flashcard_mark_reviewed' card.id %}"
+                    >
+                        {% csrf_token %}
+                        <button type="submit">Mark as reviewed</button>
+                    </form>
+                {% endif %}
+
+                <hr>
+            </section>
+        {% endfor %}
+
+        {% if all_reviewed %}
+            <form
+                method="post"
+                action="{% url 'revision_finish' selected_material.id %}"
+            >
+                {% csrf_token %}
+                <button type="submit">Finish review session</button>
+            </form>
+        {% else %}
+            <p>Mark every card as reviewed to finish this review session.</p>
+        {% endif %}
+    {% else %}
+        <p>No flashcards for this material yet. Generate some above.</p>
+    {% endif %}
+{% endif %}

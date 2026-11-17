@@ -146,9 +146,9 @@ def flashcard_generate(request):
             material.id,
         )
         messages.error(
-            request,
-            "Flashcard generation failed. Check your Gemini settings and try again.",
-        )
+    request,
+    "Gemini could not generate the flashcards. If both models are busy, wait a few minutes and try again.",
+)
 
     return redirect(f"/flashcards/?material_id={material.id}")
 
