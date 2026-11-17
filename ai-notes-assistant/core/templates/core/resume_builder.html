@@ -1,0 +1,224 @@
+{% include "shared/navbar.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Build my resume | AI Notes Assistant</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: #f5f7fb;
+            color: #182338;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        main {
+            width: min(900px, 92vw);
+            margin: 32px auto 60px;
+        }
+
+        .intro,
+        .form-panel,
+        .rating-panel,
+        .topics-panel {
+            margin-bottom: 18px;
+            padding: 22px;
+            border: 1px solid #e6eaf1;
+            border-radius: 16px;
+            background: white;
+            box-shadow: 0 8px 24px rgba(28, 44, 75, 0.05);
+        }
+
+        .intro h1 {
+            margin-top: 0;
+        }
+
+        .intro p,
+        .hint {
+            color: #68758b;
+            line-height: 1.55;
+        }
+
+        form p {
+            margin: 0 0 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 10px 11px;
+            border: 1px solid #ccd4e0;
+            border-radius: 8px;
+            font: inherit;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        .helptext {
+            display: block;
+            margin-top: 5px;
+            color: #68758b;
+            font-size: 13px;
+        }
+
+        .errorlist {
+            color: #b42318;
+        }
+
+        button,
+        .download-link {
+            display: inline-block;
+            padding: 11px 15px;
+            border: 0;
+            border-radius: 9px;
+            background: #5267e8;
+            color: white;
+            font: inherit;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .download-link {
+            margin-top: 12px;
+            background: #16866f;
+        }
+
+        .score {
+            margin: 0;
+            color: #5267e8;
+            font-size: 34px;
+            font-weight: 700;
+        }
+
+        .topic-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 0;
+            list-style: none;
+        }
+
+        .topic-list li {
+            padding: 7px 10px;
+            border-radius: 20px;
+            background: #eef0ff;
+            color: #4054d2;
+            font-size: 13px;
+        }
+
+        .messages {
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 600px) {
+            .intro,
+            .form-panel,
+            .rating-panel,
+            .topics-panel {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    {% include "shared/navbar.html" %}
+
+    <main>
+        <section class="intro">
+            <h1>Build your resume</h1>
+            <p>
+                Fill in your details and save them. Your completed quizzes,
+                chats, and finished flashcard reviews automatically add
+                material topics to the resume’s skills section.
+            </p>
+            <p class="hint">
+                Use one item per line in education, experience, projects,
+                and certifications.
+            </p>
+        </section>
+
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <section class="topics-panel">
+            <h2>Topics you’ve practised in the app</h2>
+
+            {% if practiced_topics %}
+                <ul class="topic-list">
+                    {% for topic in practiced_topics %}
+                        <li>{{ topic }}</li>
+                    {% endfor %}
+                </ul>
+                <p class="hint">
+                    These are included automatically in the downloaded resume.
+                </p>
+            {% else %}
+                <p class="hint">
+                    Complete a quiz, ask a question in Chat, or finish a
+                    flashcard review to add a topic here.
+                </p>
+            {% endif %}
+        </section>
+
+        <section class="form-panel">
+            <h2>Your details</h2>
+
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit">Save details and rate completeness</button>
+            </form>
+        </section>
+
+        {% if profile.rated_at %}
+            <section class="rating-panel">
+                <h2>Resume completeness</h2>
+                <p class="score">{{ profile.resume_score }}/100</p>
+                <p class="hint">
+                    This score reflects which resume sections you filled in.
+                    It is not a prediction of hiring or job suitability.
+                </p>
+
+                <h3>Suggestions</h3>
+                {% if profile.score_feedback %}
+                    <ul>
+                        {% for suggestion in profile.score_feedback.splitlines %}
+                            <li>{{ suggestion }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                <h3>Skills included in the PDF</h3>
+                {% if combined_skills %}
+                    <ul class="topic-list">
+                        {% for skill in combined_skills %}
+                            <li>{{ skill }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                <a class="download-link" href="{% url 'resume_download' %}">
+                    Download resume as PDF
+                </a>
+            </section>
+        {% endif %}
+    </main>
+</body>
+</html>

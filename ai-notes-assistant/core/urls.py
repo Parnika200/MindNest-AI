@@ -3,6 +3,7 @@ from . import quiz_views
 from . import views
 from . import flashcard_views
 from . import dashboard_views
+from . import resume_views
 
 urlpatterns = [
     path("", views.home, name="home"),
@@ -91,5 +92,17 @@ path(
     "flashcards/material/<int:material_id>/finish/",
     flashcard_views.revision_finish,
     name="revision_finish",
+),
+
+#resume
+path(
+    "resume/",
+    resume_views.resume_builder,
+    name="resume_builder",
+),
+path(
+    "resume/download/",
+    resume_views.resume_download,
+    name="resume_download",
 ),
 ]
