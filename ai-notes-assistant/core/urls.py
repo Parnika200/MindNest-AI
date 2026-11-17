@@ -1,6 +1,7 @@
 from django.urls import path
 from . import quiz_views
 from . import views
+from . import flashcard_views
 
 urlpatterns = [
     path("", views.home, name="home"),
@@ -63,5 +64,27 @@ path(
     "quizzes/<int:quiz_id>/delete/",
     quiz_views.quiz_delete,
     name="quiz_delete",
+),
+
+#flashcards
+path(
+    "flashcards/",
+    flashcard_views.flashcard_list,
+    name="flashcard_list",
+),
+path(
+    "flashcards/generate/",
+    flashcard_views.flashcard_generate,
+    name="flashcard_generate",
+),
+path(
+    "flashcards/<int:card_id>/review/",
+    flashcard_views.flashcard_mark_reviewed,
+    name="flashcard_mark_reviewed",
+),
+path(
+    "flashcards/material/<int:material_id>/finish/",
+    flashcard_views.revision_finish,
+    name="revision_finish",
 ),
 ]
