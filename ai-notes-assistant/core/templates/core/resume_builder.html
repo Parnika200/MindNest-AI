@@ -1,87 +1,169 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Build my resume | AI Notes Assistant</title>
+    <title>Build My Resume | AI Notes Assistant</title>
 
     <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+            --green: #047857;
+            --text: #172033;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --surface: #ffffff;
+            --background: #f5f7fb;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
-            background: #f5f7fb;
-            color: #182338;
+            background: var(--background);
+            color: var(--text);
             font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.6;
         }
 
         main {
-            width: min(900px, 92vw);
+            width: min(1000px, 92vw);
             margin: 32px auto 60px;
         }
 
-        .intro,
-        .form-panel,
-        .rating-panel,
-        .topics-panel {
-            margin-bottom: 18px;
-            padding: 22px;
-            border: 1px solid #e6eaf1;
+        .panel {
+            margin-bottom: 20px;
+            padding: 24px;
+            border: 1px solid var(--border);
             border-radius: 16px;
-            background: white;
+            background: var(--surface);
             box-shadow: 0 8px 24px rgba(28, 44, 75, 0.05);
         }
 
-        .intro h1 {
-            margin-top: 0;
+        h1,
+        h2,
+        h3 {
+            line-height: 1.25;
+        }
+
+        h1 {
+            margin: 0 0 10px;
+            font-size: clamp(28px, 4vw, 38px);
+        }
+
+        h2 {
+            margin: 0 0 14px;
+            font-size: 21px;
+        }
+
+        h3 {
+            margin: 22px 0 8px;
+            font-size: 16px;
+        }
+
+        p {
+            margin: 8px 0 14px;
         }
 
         .intro p,
-        .hint {
-            color: #68758b;
-            line-height: 1.55;
+        .hint,
+        .muted {
+            color: var(--muted);
         }
 
-        form p {
+        .hint {
+            font-size: 14px;
+        }
+
+        .messages {
+            margin-bottom: 18px;
+        }
+
+        .message {
+            padding: 12px 16px;
+            border: 1px solid #bfdbfe;
+            border-radius: 10px;
+            background: #eff6ff;
+            color: #1e40af;
+        }
+
+        .topic-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 12px 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .topic-list li {
+            padding: 6px 11px;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #3730a3;
+            font-size: 13px;
+        }
+
+        /* Django's form.as_p output */
+        .resume-form p {
             margin: 0 0 16px;
         }
 
-        label {
+        .resume-form label {
             display: block;
             margin-bottom: 6px;
             font-weight: 700;
         }
 
-        input,
-        textarea {
+        .resume-form input:not([type="checkbox"]),
+        .resume-form textarea,
+        .resume-form select {
+            display: block;
             width: 100%;
-            padding: 10px 11px;
-            border: 1px solid #ccd4e0;
-            border-radius: 8px;
+            padding: 11px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 9px;
+            background: #fff;
+            color: var(--text);
             font: inherit;
         }
 
-        textarea {
+        .resume-form input:focus,
+        .resume-form textarea:focus,
+        .resume-form select:focus {
+            outline: 3px solid rgba(79, 70, 229, 0.15);
+            border-color: var(--primary);
+        }
+
+        .resume-form textarea {
+            min-height: 110px;
             resize: vertical;
         }
 
         .helptext {
             display: block;
             margin-top: 5px;
-            color: #68758b;
+            color: var(--muted);
             font-size: 13px;
         }
 
         .errorlist {
+            margin: 6px 0;
+            padding-left: 20px;
             color: #b42318;
         }
 
         button,
-        .download-link {
+        .button {
             display: inline-block;
-            padding: 11px 15px;
+            padding: 11px 16px;
             border: 0;
             border-radius: 9px;
-            background: #5267e8;
+            background: var(--primary);
             color: white;
             font: inherit;
             font-weight: 700;
@@ -89,44 +171,80 @@
             cursor: pointer;
         }
 
-        .download-link {
-            margin-top: 12px;
-            background: #16866f;
+        button:hover,
+        .button:hover {
+            background: var(--primary-dark);
+        }
+
+        .button-green {
+            background: var(--green);
+        }
+
+        .button-green:hover {
+            background: #065f46;
+        }
+
+        .consent-box {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin: 18px 0;
+        }
+
+        .consent-box input {
+            width: auto;
+            margin-top: 5px;
+        }
+
+        .consent-box label {
+            font-weight: 400;
+        }
+
+        .score-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px;
         }
 
         .score {
             margin: 0;
-            color: #5267e8;
-            font-size: 34px;
+            color: var(--primary);
+            font-size: 40px;
+            font-weight: 800;
+        }
+
+        .analysis-score {
+            display: inline-block;
+            margin: 4px 0 12px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: var(--primary-dark);
             font-weight: 700;
         }
 
-        .topic-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            padding: 0;
-            list-style: none;
+        .analysis-list {
+            padding-left: 22px;
         }
 
-        .topic-list li {
-            padding: 7px 10px;
-            border-radius: 20px;
-            background: #eef0ff;
-            color: #4054d2;
-            font-size: 13px;
-        }
-
-        .messages {
-            margin-bottom: 16px;
+        .analysis-list li {
+            margin-bottom: 6px;
         }
 
         @media (max-width: 600px) {
-            .intro,
-            .form-panel,
-            .rating-panel,
-            .topics-panel {
-                padding: 16px;
+            main {
+                width: min(100% - 24px, 1000px);
+                margin-top: 18px;
+            }
+
+            .panel {
+                padding: 18px;
+                border-radius: 12px;
+            }
+
+            .score {
+                font-size: 34px;
             }
         }
     </style>
@@ -136,29 +254,29 @@
     {% include "shared/navbar.html" %}
 
     <main>
-        <section class="intro">
+        <section class="panel intro">
             <h1>Build your resume</h1>
             <p>
-                Fill in your details and save them. Your completed quizzes,
-                chats, and finished flashcard reviews automatically add
-                material topics to the resume’s skills section.
+                Add your education, skills, experience, projects, and target
+                role. Topics you practise in the app can also appear in the
+                skills section of your PDF.
             </p>
             <p class="hint">
-                Use one item per line in education, experience, projects,
-                and certifications.
+                For education, experience, projects, and certifications,
+                enter one item per line.
             </p>
         </section>
 
         {% if messages %}
             <div class="messages">
                 {% for message in messages %}
-                    <p>{{ message }}</p>
+                    <p class="message">{{ message }}</p>
                 {% endfor %}
             </div>
         {% endif %}
 
-        <section class="topics-panel">
-            <h2>Topics you’ve practised in the app</h2>
+        <section class="panel">
+            <h2>Topics you have practised</h2>
 
             {% if practiced_topics %}
                 <ul class="topic-list">
@@ -167,54 +285,144 @@
                     {% endfor %}
                 </ul>
                 <p class="hint">
-                    These are included automatically in the downloaded resume.
+                    These topics are included automatically in the downloaded
+                    resume.
                 </p>
             {% else %}
                 <p class="hint">
-                    Complete a quiz, ask a question in Chat, or finish a
-                    flashcard review to add a topic here.
+                    Complete a quiz, ask a question in Chat, or review a
+                    flashcard to start adding practised topics.
                 </p>
             {% endif %}
         </section>
 
-        <section class="form-panel">
-            <h2>Your details</h2>
+        <section class="panel">
+            <h2>Your resume details</h2>
 
-            <form method="post">
+            <form method="post" class="resume-form">
                 {% csrf_token %}
                 {{ form.as_p }}
-                <button type="submit">Save details and rate completeness</button>
+                <button type="submit">
+                    Save details and rate completeness
+                </button>
             </form>
         </section>
 
-        {% if profile.rated_at %}
-            <section class="rating-panel">
-                <h2>Resume completeness</h2>
-                <p class="score">{{ profile.resume_score }}/100</p>
+        {% if profile.pk %}
+            <section class="panel">
+                <h2>AI role-fit analysis</h2>
+                <p class="muted">
+                    If you agree, Gemini will review your target role, job
+                    description, education, skills, experience, projects, and
+                    practised topics. Your name, email, phone number, location,
+                    and profile links are not sent.
+                </p>
                 <p class="hint">
-                    This score reflects which resume sections you filled in.
-                    It is not a prediction of hiring or job suitability.
+                    This is guidance to help improve your resume. It is not a
+                    hiring decision. Google’s free-tier data-use and quota
+                    terms apply.
                 </p>
 
-                <h3>Suggestions</h3>
+                <form method="post" action="{% url 'resume_analyze' %}">
+                    {% csrf_token %}
+
+                    <div class="consent-box">
+                        <input
+                            id="ai-consent"
+                            type="checkbox"
+                            name="ai_consent"
+                            value="yes"
+                            required
+                        >
+                        <label for="ai-consent">
+                            I agree to send the resume content described above
+                            to Gemini for role-fit analysis.
+                        </label>
+                    </div>
+
+                    <button type="submit">Analyze my fit for this role</button>
+                </form>
+
+                {% if profile.role_analysis_at %}
+                    <hr style="border: 0; border-top: 1px solid var(--border); margin: 24px 0;">
+
+                    <h3>{{ profile.role_fit_label }}</h3>
+                    <p class="analysis-score">
+                        Role-fit estimate: {{ profile.role_fit_score }}/100
+                    </p>
+                    <p>{{ profile.role_fit_summary }}</p>
+
+                    <h3>Strengths</h3>
+                    <ul class="analysis-list">
+                        {% for item in role_fit_strengths %}
+                            <li>{{ item }}</li>
+                        {% empty %}
+                            <li>No strengths were returned.</li>
+                        {% endfor %}
+                    </ul>
+
+                    <h3>Skills or experience to improve</h3>
+                    <ul class="analysis-list">
+                        {% for item in role_fit_gaps %}
+                            <li>{{ item }}</li>
+                        {% empty %}
+                            <li>No major gaps were identified from the information provided.</li>
+                        {% endfor %}
+                    </ul>
+
+                    <h3>What to add or learn next</h3>
+                    <ul class="analysis-list">
+                        {% for item in role_fit_recommendations %}
+                            <li>{{ item }}</li>
+                        {% empty %}
+                            <li>No recommendations were returned.</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </section>
+        {% endif %}
+
+        {% if profile.rated_at %}
+            <section class="panel">
+                <h2>Resume completeness</h2>
+
+                <div class="score-row">
+                    <p class="score">{{ profile.resume_score }}/100</p>
+                    <p class="hint">
+                        This score reflects how many resume sections you
+                        completed. It does not predict hiring or job
+                        suitability.
+                    </p>
+                </div>
+
                 {% if profile.score_feedback %}
-                    <ul>
+                    <h3>Suggestions</h3>
+                    <ul class="analysis-list">
                         {% for suggestion in profile.score_feedback.splitlines %}
                             <li>{{ suggestion }}</li>
                         {% endfor %}
                     </ul>
                 {% endif %}
 
-                <h3>Skills included in the PDF</h3>
+                <h3>Skills included in your PDF</h3>
+
                 {% if combined_skills %}
                     <ul class="topic-list">
                         {% for skill in combined_skills %}
                             <li>{{ skill }}</li>
                         {% endfor %}
                     </ul>
+                {% else %}
+                    <p class="hint">
+                        Add skills or practise topics in the app to populate
+                        this section.
+                    </p>
                 {% endif %}
 
-                <a class="download-link" href="{% url 'resume_download' %}">
+                <a
+                    class="button button-green"
+                    href="{% url 'resume_download' %}"
+                >
                     Download resume as PDF
                 </a>
             </section>

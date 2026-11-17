@@ -7,6 +7,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.platypus import (
+    HRFlowable,
     ListFlowable,
     ListItem,
     Paragraph,
@@ -14,117 +15,140 @@ from reportlab.platypus import (
     Spacer,
 )
 
-
-NAVY = colors.HexColor("#183153")
-BLUE = colors.HexColor("#315D9B")
-GRAY = colors.HexColor("#536273")
+from .resume_utils import get_combined_skills
 
 
-def _add_text_section(story, title, text, heading_style, body_style):
+NAVY = colors.HexColor("#17324D")
+TEAL = colors.HexColor("#197C80")
+TEXT = colors.HexColor("#263746")
+MUTED = colors.HexColor("#536878")
+RULE = colors.HexColor("#D8E2E8")
+
+
+def add_section(story, title, styles):
+    story.append(Spacer(1, 8))
+    story.append(Paragraph(escape(title.upper()), styles["ResumeSection"]))
+    story.append(
+        HRFlowable(
+            width="100%",
+            thickness=0.8,
+            color=RULE,
+            spaceBefore=1,
+            spaceAfter=6,
+        )
+    )
+
+
+def add_multiline_bullets(story, text, styles):
+    lines = []
+
+    for raw_line in (text or "").splitlines():
+        line = raw_line.strip().lstrip("-*• ").strip()
+        if line:
+            lines.append(line)
+
+    if not lines:
+        return
+
+    items = [
+        ListItem(
+            Paragraph(escape(line), styles["ResumeBody"]),
+            leftIndent=8,
+        )
+        for line in lines
+    ]
+
+    story.append(
+        ListFlowable(
+            items,
+            bulletType="bullet",
+            leftIndent=16,
+            bulletFontName="Helvetica",
+            bulletFontSize=6,
+            bulletColor=TEAL,
+            spaceAfter=3,
+        )
+    )
+
+
+def add_text_block(story, text, styles):
     text = (text or "").strip()
 
     if not text:
         return
 
-    story.append(Paragraph(escape(title.upper()), heading_style))
-    story.append(Spacer(1, 5))
-
-    lines = [line.strip() for line in text.splitlines() if line.strip()]
-
-    if len(lines) <= 1:
-        story.append(
-            Paragraph(escape(text).replace("\n", "<br/>"), body_style)
-        )
-    else:
-        items = []
-
-        for line in lines:
-            cleaned_line = line.lstrip("•*- ").strip()
-            if cleaned_line:
-                items.append(
-                    ListItem(
-                        Paragraph(escape(cleaned_line), body_style),
-                        leftIndent=12,
-                    )
-                )
-
-        if items:
-            story.append(
-                ListFlowable(
-                    items,
-                    bulletType="bullet",
-                    leftIndent=18,
-                    bulletFontName="Helvetica",
-                    bulletFontSize=7,
-                )
-            )
-
-    story.append(Spacer(1, 12))
+    escaped_text = escape(text).replace("\n", "<br/>")
+    story.append(Paragraph(escaped_text, styles["ResumeBody"]))
 
 
 def create_resume_pdf(profile, combined_skills, practiced_topics):
     buffer = BytesIO()
-    styles = getSampleStyleSheet()
+    sample_styles = getSampleStyleSheet()
 
-    name_style = ParagraphStyle(
-        "ResumeName",
-        parent=styles["Title"],
-        fontName="Helvetica-Bold",
-        fontSize=24,
-        leading=28,
-        textColor=NAVY,
-        alignment=TA_CENTER,
-        spaceAfter=5,
+    styles = {
+        "Name": ParagraphStyle(
+            "ResumeName",
+            parent=sample_styles["Title"],
+            fontName="Helvetica-Bold",
+            fontSize=24,
+            leading=28,
+            textColor=NAVY,
+            alignment=TA_CENTER,
+            spaceAfter=3,
+        ),
+        "Role": ParagraphStyle(
+            "ResumeRole",
+            parent=sample_styles["Normal"],
+            fontName="Helvetica",
+            fontSize=11,
+            leading=15,
+            textColor=TEAL,
+            alignment=TA_CENTER,
+            spaceAfter=8,
+        ),
+        "Contact": ParagraphStyle(
+            "ResumeContact",
+            parent=sample_styles["Normal"],
+            fontName="Helvetica",
+            fontSize=8.5,
+            leading=12,
+            textColor=MUTED,
+            alignment=TA_CENTER,
+            spaceAfter=8,
+        ),
+        "ResumeSection": ParagraphStyle(
+            "ResumeSection",
+            parent=sample_styles["Heading2"],
+            fontName="Helvetica-Bold",
+            fontSize=10,
+            leading=13,
+            textColor=NAVY,
+            spaceBefore=6,
+            spaceAfter=3,
+        ),
+        "ResumeBody": ParagraphStyle(
+            "ResumeBody",
+            parent=sample_styles["BodyText"],
+            fontName="Helvetica",
+            fontSize=9,
+            leading=13,
+            textColor=TEXT,
+            spaceAfter=3,
+        ),
+    }
+
+    document = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        rightMargin=0.78 * inch,
+        leftMargin=0.78 * inch,
+        topMargin=0.62 * inch,
+        bottomMargin=0.62 * inch,
+        title=f"{profile.full_name} - Resume",
+        author=profile.full_name,
     )
 
-    role_style = ParagraphStyle(
-        "ResumeRole",
-        parent=styles["Normal"],
-        fontName="Helvetica",
-        fontSize=12,
-        leading=16,
-        textColor=BLUE,
-        alignment=TA_CENTER,
-        spaceAfter=8,
-    )
-
-    contact_style = ParagraphStyle(
-        "ResumeContact",
-        parent=styles["Normal"],
-        fontName="Helvetica",
-        fontSize=9,
-        leading=13,
-        textColor=GRAY,
-        alignment=TA_CENTER,
-        spaceAfter=14,
-    )
-
-    heading_style = ParagraphStyle(
-        "ResumeSectionHeading",
-        parent=styles["Heading2"],
-        fontName="Helvetica-Bold",
-        fontSize=11,
-        leading=14,
-        textColor=BLUE,
-        spaceBefore=8,
-        spaceAfter=2,
-    )
-
-    body_style = ParagraphStyle(
-        "ResumeBody",
-        parent=styles["BodyText"],
-        fontName="Helvetica",
-        fontSize=9.5,
-        leading=14,
-        textColor=colors.HexColor("#273444"),
-    )
-
-    story = [
-        Paragraph(escape(profile.full_name), name_style),
-        Paragraph(escape(profile.target_role), role_style),
-    ]
-
-    contact_parts = [
+    contact_items = [
         profile.email,
         profile.phone,
         profile.location,
@@ -132,105 +156,87 @@ def create_resume_pdf(profile, combined_skills, practiced_topics):
         profile.portfolio_url,
     ]
     contact_line = "  |  ".join(
-        escape(value.strip())
-        for value in contact_parts
-        if value and value.strip()
+        escape(item.strip())
+        for item in contact_items
+        if item and item.strip()
     )
+
+    story = [
+        Paragraph(escape(profile.full_name), styles["Name"]),
+        Paragraph(escape(profile.target_role), styles["Role"]),
+    ]
 
     if contact_line:
-        story.append(Paragraph(contact_line, contact_style))
+        story.append(Paragraph(contact_line, styles["Contact"]))
 
     story.append(
-        Paragraph("PROFESSIONAL SUMMARY", heading_style)
+        HRFlowable(
+            width="100%",
+            thickness=2,
+            color=TEAL,
+            spaceBefore=2,
+            spaceAfter=8,
+        )
     )
+
     if profile.professional_summary.strip():
-        story.append(
-            Paragraph(
-                escape(profile.professional_summary).replace("\n", "<br/>"),
-                body_style,
-            )
+        add_section(story, "Professional Summary", styles)
+        add_text_block(
+            story,
+            profile.professional_summary,
+            styles,
         )
-    else:
-        story.append(
-            Paragraph(
-                "Motivated candidate seeking a role as "
-                + escape(profile.target_role)
-                + ".",
-                body_style,
-            )
-        )
-    story.append(Spacer(1, 12))
 
-    if combined_skills:
-        story.append(Paragraph("SKILLS", heading_style))
-        story.append(
-            Paragraph(
-                escape(", ".join(combined_skills)),
-                body_style,
-            )
-        )
-        story.append(Spacer(1, 5))
+    skills = combined_skills
+    if skills:
+        add_section(story, "Skills & Practiced Topics", styles)
+        add_text_block(story, ", ".join(skills), styles)
 
-        if practiced_topics:
+    if profile.education.strip() or profile.grades.strip():
+        add_section(story, "Education", styles)
+        add_multiline_bullets(story, profile.education, styles)
+
+        if profile.grades.strip():
+            story.append(Spacer(1, 3))
             story.append(
                 Paragraph(
-                    "<b>Topics practiced:</b> "
-                    + escape(", ".join(practiced_topics)),
-                    body_style,
+                    f"<b>Grades:</b> {escape(profile.grades).replace(chr(10), '<br/>')}",
+                    styles["ResumeBody"],
                 )
             )
-        story.append(Spacer(1, 12))
 
-    _add_text_section(
+    for heading, value in [
+        ("Experience", profile.experience),
+        ("Projects", profile.projects),
+        ("Certifications", profile.certifications),
+    ]:
+        if value.strip():
+            add_section(story, heading, styles)
+            add_multiline_bullets(story, value, styles)
+
+    def draw_footer(canvas, doc):
+        canvas.saveState()
+        canvas.setStrokeColor(RULE)
+        canvas.setLineWidth(0.5)
+        canvas.line(
+            doc.leftMargin,
+            0.43 * inch,
+            letter[0] - doc.rightMargin,
+            0.43 * inch,
+        )
+        canvas.setFont("Helvetica", 8)
+        canvas.setFillColor(MUTED)
+        canvas.drawRightString(
+            letter[0] - doc.rightMargin,
+            0.25 * inch,
+            f"Page {doc.page}",
+        )
+        canvas.restoreState()
+
+    document.build(
         story,
-        "Education",
-        profile.education,
-        heading_style,
-        body_style,
+        onFirstPage=draw_footer,
+        onLaterPages=draw_footer,
     )
 
-    _add_text_section(
-        story,
-        "Grades and academic results",
-        profile.grades,
-        heading_style,
-        body_style,
-    )
-
-    _add_text_section(
-        story,
-        "Experience",
-        profile.experience,
-        heading_style,
-        body_style,
-    )
-
-    _add_text_section(
-        story,
-        "Projects",
-        profile.projects,
-        heading_style,
-        body_style,
-    )
-
-    _add_text_section(
-        story,
-        "Certifications",
-        profile.certifications,
-        heading_style,
-        body_style,
-    )
-
-    document = SimpleDocTemplate(
-        buffer,
-        pagesize=letter,
-        rightMargin=0.7 * inch,
-        leftMargin=0.7 * inch,
-        topMargin=0.65 * inch,
-        bottomMargin=0.65 * inch,
-        title=f"{profile.full_name} - Resume",
-        author=profile.full_name,
-    )
-
-    document.build(story)
     return buffer.getvalue()

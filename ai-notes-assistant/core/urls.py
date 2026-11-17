@@ -105,4 +105,9 @@ path(
     resume_views.resume_download,
     name="resume_download",
 ),
+path(
+    "resume/analyze/",
+    resume_views.resume_analyze,
+    name="resume_analyze",
+),
 ]
