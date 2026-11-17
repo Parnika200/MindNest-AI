@@ -84,6 +84,7 @@ class Summary(models.Model):
 
     def __str__(self):
         return f"{self.get_summary_type_display()} for {self.material.title}"
+
 class ChatHistory(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -246,7 +247,7 @@ class Flashcard(models.Model):
     question = models.TextField()
     answer = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-
+    is_reviewed = models.BooleanField(default=False)
     class Meta:
         ordering = ["-created_at"]
 
