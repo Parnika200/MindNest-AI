@@ -327,6 +327,19 @@ class ResumeProfile(models.Model):
     score_feedback = models.TextField(blank=True)
     rated_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
+    # Optional job description makes the role-fit analysis more specific.
+    job_description = models.TextField(blank=True)
+
+    role_fit_score = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+    )
+    role_fit_label = models.CharField(max_length=30, blank=True)
+    role_fit_summary = models.TextField(blank=True)
+    role_fit_strengths = models.TextField(blank=True)
+    role_fit_gaps = models.TextField(blank=True)
+    role_fit_recommendations = models.TextField(blank=True)
+    role_analysis_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"Resume for {self.full_name}"
