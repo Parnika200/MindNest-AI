@@ -2,10 +2,15 @@ from django.urls import path
 from . import quiz_views
 from . import views
 from . import flashcard_views
+from . import dashboard_views
 
 urlpatterns = [
     path("", views.home, name="home"),
-    path("dashboard/", views.dashboard, name="dashboard"),
+    path(
+    "dashboard/",
+    dashboard_views.dashboard,
+    name="dashboard",
+),
 
     #upload PDF
     path("materials/", views.material_list, name="material_list"),
