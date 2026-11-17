@@ -289,3 +289,44 @@ class RevisionProgress(models.Model):
 
     def __str__(self):
         return f"Revision progress: {self.user} / {self.material.title}"
+
+
+
+
+class ResumeProfile(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="resume_profile",
+    )
+
+    full_name = models.CharField(max_length=150)
+    email = models.EmailField()
+    phone = models.CharField(max_length=40, blank=True)
+    location = models.CharField(max_length=150, blank=True)
+
+    target_role = models.CharField(max_length=150)
+    professional_summary = models.TextField(blank=True)
+
+    # Put each degree/qualification on a separate line.
+    education = models.TextField()
+    grades = models.TextField(blank=True)
+
+    # Enter manual skills separated by commas or new lines.
+    skills = models.TextField()
+
+    # Put each experience, project, or certification on a separate line.
+    experience = models.TextField(blank=True)
+    projects = models.TextField(blank=True)
+    certifications = models.TextField(blank=True)
+
+    linkedin_url = models.URLField(blank=True)
+    portfolio_url = models.URLField(blank=True)
+
+    resume_score = models.PositiveSmallIntegerField(default=0)
+    score_feedback = models.TextField(blank=True)
+    rated_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Resume for {self.full_name}"
