@@ -161,6 +161,14 @@ def dashboard(request):
         "recent_attempts": recent_attempts,
         "recent_materials": recent_materials,
         "chart_data": chart_data,
+
+        "is_new_user": (
+    materials.count() == 0
+    and summaries.count() == 0
+    and quizzes.count() == 0
+    and completed_attempts.count() == 0
+    and revision_sessions == 0
+),
     }
 
     return render(request, "core/dashboard.html", context)

@@ -1,25 +1,760 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>Your dashboard | MindNest AI</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | AI Notes Assistant</title>
+
+    <style>
+        :root {
+            --ink: #182338;
+            --muted: #68758b;
+            --line: #e6eaf1;
+            --page: #f5f7fb;
+            --white: #ffffff;
+            --blue: #5267e8;
+            --blue-light: #eef0ff;
+            --teal: #13a88a;
+            --purple: #8c62d9;
+            --orange: #e99b38;
+            --shadow: 0 8px 24px rgba(28, 44, 75, 0.06);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--page);
+            color: var(--ink);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        a {
+            color: var(--blue);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 16px 5vw;
+            background: var(--white);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .brand {
+            color: var(--ink);
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 18px;
+            font-size: 14px;
+        }
+
+        .logout-form {
+            display: inline;
+            margin: 0;
+        }
+
+        .logout-button {
+            padding: 8px 12px;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            background: var(--white);
+            color: var(--ink);
+            cursor: pointer;
+        }
+
+        .page {
+            width: min(1180px, 92vw);
+            margin: 34px auto 60px;
+        }
+
+        .welcome {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: end;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .welcome h1 {
+            margin: 0 0 8px;
+            font-size: clamp(26px, 4vw, 34px);
+        }
+
+        .welcome p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .date-label {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .stat-card,
+        .panel {
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: var(--white);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card {
+            min-height: 126px;
+            padding: 18px;
+        }
+
+        .stat-label {
+            margin: 0 0 14px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .stat-value {
+            margin: 0;
+            font-size: 30px;
+            font-weight: 700;
+        }
+
+        .stat-note {
+            margin: 7px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1.35fr 1fr;
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .panel {
+            padding: 20px;
+        }
+
+        .panel h2 {
+            margin: 0 0 6px;
+            font-size: 18px;
+        }
+
+        .panel-subtitle {
+            margin: 0 0 18px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .chart-wrap {
+            position: relative;
+            height: 270px;
+        }
+
+        .revision-panel {
+            margin-bottom: 18px;
+        }
+
+        .revision-chart-wrap {
+            position: relative;
+            height: 270px;
+        }
+
+        .empty-chart {
+            display: grid;
+            min-height: 220px;
+            place-items: center;
+            padding: 20px;
+            border: 1px dashed var(--line);
+            border-radius: 12px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .activity-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .activity-list {
+            display: grid;
+            gap: 12px;
+            margin: 16px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .activity-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .activity-item:last-child {
+            padding-bottom: 0;
+            border-bottom: 0;
+        }
+
+        .activity-title {
+            margin: 0 0 5px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .activity-detail,
+        .activity-date,
+        .empty-text {
+            margin: 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .activity-date {
+            flex-shrink: 0;
+            text-align: right;
+        }
+
+        .score-pill {
+            display: inline-block;
+            margin-top: 5px;
+            padding: 4px 8px;
+            border-radius: 20px;
+            background: var(--blue-light);
+            color: var(--blue);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .getting-started {
+    margin: 8px 0 24px;
+    padding: clamp(22px, 4vw, 38px);
+    border: 1px solid #e2e7ff;
+    border-radius: 22px;
+    background: linear-gradient(135deg, #ffffff 0%, #f1f3ff 100%);
+    box-shadow: var(--shadow);
+}
+
+.starter-heading {
+    max-width: 680px;
+    margin-bottom: 26px;
+}
+
+.starter-heading h2 {
+    margin: 0 0 10px;
+    font-size: clamp(22px, 3vw, 30px);
+}
+
+.starter-heading p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.6;
+}
+
+.starter-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.starter-card {
+    padding: 20px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: #fff;
+}
+
+.starter-number {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    margin-bottom: 14px;
+    place-items: center;
+    border-radius: 11px;
+    background: var(--blue-light);
+    color: var(--blue);
+    font-weight: 700;
+}
+
+.starter-card h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+}
+
+.starter-card p {
+    min-height: 60px;
+    margin: 0 0 16px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.starter-link {
+    display: inline-block;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: var(--blue);
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.starter-link:hover {
+    background: #4054d2;
+    color: white;
+    text-decoration: none;
+}
+
+@media (max-width: 700px) {
+    .starter-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .starter-card p {
+        min-height: 0;
+    }
+}
+
+        @media (max-width: 900px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .topbar {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .activity-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-card {
+                min-height: 110px;
+                padding: 15px;
+            }
+
+            .stat-value {
+                font-size: 25px;
+            }
+
+            .panel {
+                padding: 16px;
+            }
+
+            .chart-wrap,
+            .revision-chart-wrap {
+                height: 230px;
+            }
+
+            .activity-item {
+                flex-direction: column;
+            }
+
+            .activity-date {
+                text-align: left;
+            }
+        }
+    </style>
 </head>
+
 <body>
-    <h1>Your dashboard</h1>
-    <p>Welcome, {{ user.email|default:user.username }}.</p>
-    <p>Your account is signed in.</p>
+    <header class="topbar">
+        <a class="brand" href="{% url 'dashboard' %}">
+            AI Notes Assistant
+        </a>
 
-    <form action="{% url 'account_logout' %}" method="post">
-        {% csrf_token %}
-        <button type="submit">Log out</button>
-    </form>
-
-   
-    <a href="{% url 'material_list' %}">My Notes</a>
+        <nav class="nav-links" aria-label="Main navigation">
+            <a href="{% url 'material_list' %}">My Notes</a>
     <a href="{% url 'material_upload' %}">Upload Material</a>
     <a href="{% url 'summary_list' %}">View Summaries</a>
     <a href="{% url 'chat_page' %}">Chat</a>
     <a href="{% url 'quiz_list' %}">Quizzes</a>
     <a href="{% url 'flashcard_list' %}">Flashcards</a>
+
+            <form
+                class="logout-form"
+                method="post"
+                action="{% url 'account_logout' %}"
+            >
+                {% csrf_token %}
+                <button class="logout-button" type="submit">Log out</button>
+            </form>
+        </nav>
+    </header>
+
+    <main class="page">
+        <section class="welcome">
+            <div>
+                <h1>Welcome back, {{ display_name }}</h1>
+                <p>Here’s a snapshot of your study activity and progress.</p>
+            </div>
+            <div class="date-label">
+                Your learning dashboard
+            </div>
+        </section>
+
+
+        {% if is_new_user %}
+    <section class="getting-started">
+        <div class="starter-heading">
+            <h2>Your study space is ready</h2>
+            <p>
+                Start with a study file. Your summaries, quizzes, chat,
+                and flashcards will be organized around the material you upload.
+            </p>
+        </div>
+
+        <div class="starter-grid">
+            <article class="starter-card">
+                <span class="starter-number">1</span>
+                <h3>Upload study material</h3>
+                <p>
+                    Add a PDF, DOCX, or TXT file. We’ll extract its text
+                    so the study tools can use it.
+                </p>
+                <a class="starter-link" href="{% url 'material_upload' %}">
+                    Upload material
+                </a>
+            </article>
+
+            <article class="starter-card">
+                <span class="starter-number">2</span>
+                <h3>Create a study aid</h3>
+                <p>
+                    Generate a short or long summary, key points,
+                    or a quiz from your uploaded material.
+                </p>
+                <a class="starter-link" href="{% url 'material_list' %}">
+                    View materials
+                </a>
+            </article>
+
+            <article class="starter-card">
+                <span class="starter-number">3</span>
+                <h3>Review and ask questions</h3>
+                <p>
+                    Use flashcards to revise or ask questions about
+                    the material in the chat page.
+                </p>
+                <a class="starter-link" href="{% url 'flashcard_list' %}">
+                    Open flashcards
+                </a>
+            </article>
+        </div>
+    </section>
+{% else %}
+        <section class="stats-grid" aria-label="Progress summary">
+            <article class="stat-card">
+                <p class="stat-label">Study materials</p>
+                <p class="stat-value">{{ total_materials }}</p>
+                <p class="stat-note">{{ processed_materials }} ready to study</p>
+            </article>
+
+            <article class="stat-card">
+                <p class="stat-label">Summaries</p>
+                <p class="stat-value">{{ summary_count }}</p>
+                <p class="stat-note">Saved for revision</p>
+            </article>
+
+            <article class="stat-card">
+                <p class="stat-label">Quizzes taken</p>
+                <p class="stat-value">{{ completed_quiz_count }}</p>
+                <p class="stat-note">Completed attempts</p>
+            </article>
+
+            <article class="stat-card">
+                <p class="stat-label">Average quiz score</p>
+                <p class="stat-value">{{ average_score }}%</p>
+                <p class="stat-note">Across completed attempts</p>
+            </article>
+
+            <article class="stat-card">
+                <p class="stat-label">Revision sessions</p>
+                <p class="stat-value">{{ revision_sessions }}</p>
+                <p class="stat-note">Completed material reviews</p>
+            </article>
+        </section>
+
+        <section class="charts-grid">
+            <article class="panel">
+                <h2>Quiz score trend</h2>
+                <p class="panel-subtitle">
+                    Your average score by month over the last six months.
+                </p>
+
+                {% if completed_quiz_count %}
+                    <div class="chart-wrap">
+                        <canvas
+                            id="score-trend-chart"
+                            role="img"
+                            aria-label="Line chart showing average quiz score by month"
+                        ></canvas>
+                    </div>
+                {% else %}
+                    <div class="empty-chart">
+                        Complete a quiz to see your score trend here.
+                    </div>
+                {% endif %}
+            </article>
+
+            <article class="panel">
+                <h2>Answer accuracy</h2>
+                <p class="panel-subtitle">
+                    Correct and incorrect answers from your completed quizzes.
+                </p>
+
+                {% if total_answers %}
+                    <div class="chart-wrap">
+                        <canvas
+                            id="answer-accuracy-chart"
+                            role="img"
+                            aria-label="Doughnut chart showing correct and incorrect answers"
+                        ></canvas>
+                    </div>
+                {% else %}
+                    <div class="empty-chart">
+                        Your answer accuracy chart will appear after your first completed quiz.
+                    </div>
+                {% endif %}
+            </article>
+        </section>
+
+        <section class="panel revision-panel">
+            <h2>Revision by topic</h2>
+            <p class="panel-subtitle">
+                Completed revision sessions for your most-reviewed materials.
+            </p>
+
+            {% if has_revision_data %}
+                <div class="revision-chart-wrap">
+                    <canvas
+                        id="revision-chart"
+                        role="img"
+                        aria-label="Bar chart showing revision sessions by topic"
+                    ></canvas>
+                </div>
+            {% else %}
+                <div class="empty-chart">
+                    Finish a flashcard review session to see revision progress here.
+                </div>
+            {% endif %}
+        </section>
+
+        <section class="activity-grid">
+            <article class="panel">
+                <h2>Recent quiz attempts</h2>
+
+                {% if recent_attempts %}
+                    <ul class="activity-list">
+                        {% for attempt in recent_attempts %}
+                            <li class="activity-item">
+                                <div>
+                                    <p class="activity-title">
+                                        {{ attempt.quiz.title }}
+                                    </p>
+                                    <p class="activity-detail">
+                                        {{ attempt.quiz.material.title }}
+                                    </p>
+                                    <span class="score-pill">
+                                        {{ attempt.score }}/{{ attempt.total_questions }}
+                                        · {{ attempt.percentage }}%
+                                    </span>
+                                </div>
+                                <p class="activity-date">
+                                    {{ attempt.completed_at|date:"d M Y" }}
+                                </p>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="empty-text">
+                        Your completed quiz attempts will appear here.
+                    </p>
+                {% endif %}
+            </article>
+
+            <article class="panel">
+                <h2>Recently uploaded materials</h2>
+
+                {% if recent_materials %}
+                    <ul class="activity-list">
+                        {% for material in recent_materials %}
+                            <li class="activity-item">
+                                <div>
+                                    <p class="activity-title">
+                                        <a href="{% url 'material_list' %}">
+                                            {{ material.title }}
+                                        </a>
+                                    </p>
+                                    <p class="activity-detail">
+                                        {{ material.file_type }} ·
+                                        {{ material.get_status_display|default:material.status }}
+                                    </p>
+                                </div>
+                                <p class="activity-date">
+                                    {{ material.uploaded_at|date:"d M Y" }}
+                                </p>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="empty-text">
+                        Your uploaded materials will appear here.
+                    </p>
+                {% endif %}
+            </article>
+        </section>
+        {% endif %}
+    </main>
+
+    {{ chart_data|json_script:"dashboard-chart-data" }}
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+    <script>
+        const chartData = JSON.parse(
+            document.getElementById("dashboard-chart-data").textContent
+        );
+
+        const scoreCanvas = document.getElementById("score-trend-chart");
+        if (scoreCanvas) {
+            new Chart(scoreCanvas, {
+                type: "line",
+                data: {
+                    labels: chartData.months,
+                    datasets: [{
+                        label: "Average score (%)",
+                        data: chartData.monthlyScores,
+                        borderColor: "#5267e8",
+                        backgroundColor: "rgba(82, 103, 232, 0.12)",
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 4,
+                        pointBackgroundColor: "#5267e8"
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: value => value + "%"
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        const accuracyCanvas = document.getElementById(
+            "answer-accuracy-chart"
+        );
+        if (accuracyCanvas) {
+            new Chart(accuracyCanvas, {
+                type: "doughnut",
+                data: {
+                    labels: ["Correct", "Incorrect"],
+                    datasets: [{
+                        data: [
+                            chartData.correctAnswers,
+                            chartData.incorrectAnswers
+                        ],
+                        backgroundColor: ["#13a88a", "#f1a0a0"],
+                        borderWidth: 0,
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: "68%",
+                    plugins: {
+                        legend: {
+                            position: "bottom"
+                        }
+                    }
+                }
+            });
+        }
+
+        const revisionCanvas = document.getElementById("revision-chart");
+        if (revisionCanvas) {
+            new Chart(revisionCanvas, {
+                type: "bar",
+                data: {
+                    labels: chartData.revisionLabels,
+                    datasets: [{
+                        label: "Completed sessions",
+                        data: chartData.revisionCounts,
+                        backgroundColor: "#8c62d9",
+                        borderRadius: 7,
+                        maxBarThickness: 48
+                    }]
+                },
+                options: {
+                    indexAxis: "y",
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+    </script>
 </body>
 </html>
+
+   
+    
